@@ -1,0 +1,12 @@
+# CRITICAL: never commit secrets or credentials
+secrets/db_password.txt
+secrets/db_root_password.txt
+secrets/credentials.txt
+
+# Never commit the .env file (contains your domain and usernames)
+srcs/.env
+
+# Docker build cache artifacts
+**/__pycache__
+*.pyc
+.DS_Store

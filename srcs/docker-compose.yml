@@ -1,0 +1,166 @@
+# docker-compose.yml — orchestrates all containers for the Inception project
+# Version 3.8 supports secrets, named volumes, and custom networks
+version: '3.8'
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+# Docker secrets are files mounted at /run/secrets/<name> inside containers.
+# This is more secure than environment variables because:
+# - they don't appear in `docker inspect` output
+# - they can't be leaked via /proc/<pid>/environ
+# - the subject strongly recommends them for passwords
+secrets:
+  db_password:
+    # file: points to the secret file relative to this compose file's location.
+    # The path ../secrets/ goes up one level from srcs/ to the project root.
+    file: ../secrets/db_password.txt
+
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+
+  credentials:
+    file: ../secrets/credentials.txt
+
+# ── Services ──────────────────────────────────────────────────────────────────
+services:
+
+  # ── MariaDB ────────────────────────────────────────────────────────────────
+  mariadb:
+    # build.context: the directory Docker sends to the daemon as the build context
+    # (all files COPY can access must be inside this directory)
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+
+    # Container name must match the service name — required by the subject
+    container_name: mariadb
+
+    # restart: always — if the container crashes or the host reboots,
+    # Docker automatically restarts it. Required by the subject.
+    restart: always
+
+    # environment: variables injected into the container's environment.
+    # Values come from the .env file (docker-compose loads it automatically).
+    # These are non-secret config values — database name, username.
+    # Passwords are passed via secrets, not here.
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER:     ${MYSQL_USER}
+
+    # secrets: mounts the named secrets as files at /run/secrets/<name>
+    # init.sh reads these files at runtime
+    secrets:
+      - db_password
+      - db_root_password
+
+    # volumes: mount the named volume at the MariaDB data directory.
+    # All database files are stored here → survive container restarts/rebuilds.
+    volumes:
+      - db_data:/var/lib/mysql
+
+    # networks: attach this container to our custom bridge network.
+    # The subject forbids using network: host or --link.
+    networks:
+      - inception
+
+  # ── WordPress ──────────────────────────────────────────────────────────────
+  wordpress:
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+
+    container_name: wordpress
+    restart: always
+
+    # depends_on: docker-compose starts mariadb BEFORE wordpress.
+    # Note: this only waits for the container to START, not for MariaDB
+    # to be READY — that's why setup.sh has the mysqladmin ping retry loop.
+    depends_on:
+      - mariadb
+
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER:     ${MYSQL_USER}
+      DOMAIN_NAME:    ${DOMAIN_NAME}
+      WP_ADMIN_USER:  ${WP_ADMIN_USER}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      WP_USER:        ${WP_USER}
+      WP_USER_EMAIL:  ${WP_USER_EMAIL}
+
+    secrets:
+      - db_password
+      - credentials
+
+    volumes:
+      # The wordpress_files volume is shared between wordpress and nginx.
+      # WordPress writes PHP files here; NGINX reads static assets from here.
+      - wordpress_files:/var/www/html
+
+    networks:
+      - inception
+
+  # ── NGINX ──────────────────────────────────────────────────────────────────
+  nginx:
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+      # Pass DOMAIN_NAME as a build ARG so generate_ssl.sh uses it
+      # for the certificate's Common Name
+      args:
+        DOMAIN_NAME: ${DOMAIN_NAME}
+
+    container_name: nginx
+    restart: always
+
+    depends_on:
+      - wordpress
+
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME}
+
+    # ports: map host port 443 to container port 443.
+    # Format: "HOST:CONTAINER"
+    # This is the ONLY port mapping in the entire project.
+    # All other inter-container communication uses the internal network.
+    ports:
+      - "443:443"
+
+    volumes:
+      # NGINX needs read access to WordPress PHP files to serve static assets
+      # (CSS, JS, images) directly without going through PHP-FPM
+      - wordpress_files:/var/www/html
+
+    networks:
+      - inception
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+# Named volumes — Docker manages their lifecycle.
+# The subject requires data to be stored at /home/login/data on the host.
+volumes:
+  db_data:
+    driver: local
+    driver_opts:
+      # type: none = use a plain directory on the host (not a tmpfs or nfs)
+      type: none
+      # o: bind = bind-mount the host directory into the volume
+      # This is how we control WHERE Docker stores the data on the host.
+      # Named volumes + bind driver_opts is NOT the same as a bind mount service —
+      # the subject only forbids bind mounts in services, not in volume definitions.
+      o: bind
+      # Replace "yourlogin" with your actual login
+      device: /home/yourlogin/data/mariadb
+
+  wordpress_files:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/yourlogin/data/wordpress
+
+# ── Network ───────────────────────────────────────────────────────────────────
+# A custom bridge network is required by the subject.
+# bridge: the standard Docker network driver — creates a virtual ethernet
+# switch that all attached containers plug into.
+# Docker's built-in DNS resolves container names on this network.
+networks:
+  inception:
+    driver: bridge
