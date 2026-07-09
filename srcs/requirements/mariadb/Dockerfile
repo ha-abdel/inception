@@ -1,3 +1,6 @@
+# ── Base image ────────────────────────────────────────────────────────────────
+# penultimate stable Debian (bookworm = Debian 12, current stable as of 2024/25)
+# "latest" tag is forbidden by the project — always pin to a specific release
 FROM debian:bookworm
 
 # ── Install MariaDB ───────────────────────────────────────────────────────────

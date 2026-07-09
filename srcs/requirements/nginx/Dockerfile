@@ -6,7 +6,7 @@ FROM debian:bookworm
 # openssl   — needed to generate the self-signed TLS certificate
 # gettext-base — provides envsubst, used to inject $DOMAIN_NAME into nginx.conf
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends ca-certificates \
         nginx \
         openssl \
         gettext-base \

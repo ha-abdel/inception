@@ -117,10 +117,7 @@ services:
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME}
 
-    # ports: map host port 443 to container port 443.
-    # Format: "HOST:CONTAINER"
-    # This is the ONLY port mapping in the entire project.
-    # All other inter-container communication uses the internal network.
+
     ports:
       - "443:443"
 
@@ -146,15 +143,15 @@ volumes:
       # Named volumes + bind driver_opts is NOT the same as a bind mount service —
       # the subject only forbids bind mounts in services, not in volume definitions.
       o: bind
-      # Replace "yourlogin" with your actual login
-      device: /home/yourlogin/data/mariadb
+      # Replace "abdel-ha" with your actual login
+      device: /home/abdel-ha/data/mariadb
 
   wordpress_files:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /home/yourlogin/data/wordpress
+      device: /home/abdel-ha/data/wordpress
 
 # ── Network ───────────────────────────────────────────────────────────────────
 # A custom bridge network is required by the subject.
