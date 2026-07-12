@@ -1,13 +1,3 @@
-# docker-compose.yml — orchestrates all containers for the Inception project
-# Version 3.8 supports secrets, named volumes, and custom networks
-version: '3.8'
-
-# ── Secrets ───────────────────────────────────────────────────────────────────
-# Docker secrets are files mounted at /run/secrets/<name> inside containers.
-# This is more secure than environment variables because:
-# - they don't appear in `docker inspect` output
-# - they can't be leaked via /proc/<pid>/environ
-# - the subject strongly recommends them for passwords
 secrets:
   db_password:
     # file: points to the secret file relative to this compose file's location.

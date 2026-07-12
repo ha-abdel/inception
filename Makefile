@@ -7,10 +7,8 @@ create_dirs:
 	mkdir -p $(DATA_DIR)/mariadb
 	mkdir -p $(DATA_DIR)/wordpress
 
-# Build all images and start all containers in detached mode (-d = background)
-# --build forces a rebuild even if the image already exists
 up:
-	docker compose -f $(COMPOSE_FILE) up -d --build
+	docker compose -f $(COMPOSE_FILE) up --build
 
 down:
 	docker compose -f $(COMPOSE_FILE) down
