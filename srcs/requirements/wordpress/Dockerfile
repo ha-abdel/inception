@@ -1,6 +1,4 @@
-# ── Base image ────────────────────────────────────────────────────────────────
-FROM debian:bookworm
-
+FROM debian:12
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -32,7 +30,7 @@ COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 
 RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
 
-
+# directory for php-fpm socket file
 RUN mkdir -p /run/php
 
 # ── Copy entrypoint script ────────────────────────────────────────────────────

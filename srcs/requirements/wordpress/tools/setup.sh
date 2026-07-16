@@ -1,6 +1,6 @@
+#!/bin/bash
 set -e
 
-# ── 1. Read secrets ───────────────────────────────────────────────────────────
 DB_PASSWORD=$(cat /run/secrets/db_password)
 CREDENTIALS=$(cat /run/secrets/credentials)
 
@@ -10,7 +10,7 @@ WP_USER_PASSWORD=$(echo  "$CREDENTIALS" | sed -n '2p')
 
 echo "Waiting for MariaDB..."
 until mysqladmin ping -h mariadb -u "${MYSQL_USER}" -p"${DB_PASSWORD}" \
-      --silent 2>/dev/null; do
+    2>/dev/null; do
     sleep 1
 done
 echo "MariaDB is ready."

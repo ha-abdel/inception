@@ -15,11 +15,11 @@ down:
 
 clean: down
 	docker compose -f $(COMPOSE_FILE) down -v
-	sudo rm -rf $(DATA_DIR)/mariadb/*
-	sudo rm -rf $(DATA_DIR)/wordpress/*
+	sudo rm -rf $(DATA_DIR)/mariadb/
+	sudo rm -rf $(DATA_DIR)/wordpress/
 
 fclean: clean
-	docker system prune -af
+# 	docker system prune -af
 
 re: fclean all
 
