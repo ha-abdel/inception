@@ -33,7 +33,6 @@ RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
 # directory for php-fpm socket file
 RUN mkdir -p /run/php
 
-# ── Copy entrypoint script ────────────────────────────────────────────────────
 COPY tools/setup.sh /usr/local/bin/setup.sh
 RUN chmod +x /usr/local/bin/setup.sh
 
