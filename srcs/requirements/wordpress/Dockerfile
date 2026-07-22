@@ -27,10 +27,6 @@ RUN curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-
 
 COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 
-
-RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
-
-# directory for php-fpm socket file
 RUN mkdir -p /run/php
 
 COPY tools/setup.sh /usr/local/bin/setup.sh

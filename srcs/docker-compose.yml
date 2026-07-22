@@ -7,6 +7,8 @@ secrets:
 
   credentials:
     file: ../secrets/credentials.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt
 
 services:
 
@@ -16,9 +18,11 @@ services:
       dockerfile: Dockerfile
     container_name: mariadb
     restart: always
-    environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER:     ${MYSQL_USER}
+    env_file:
+      - .env
+    # environment:
+    #   MYSQL_DATABASE: ${MYSQL_DATABASE}
+    #   MYSQL_USER:     ${MYSQL_USER}
 
     secrets:
       - db_password
@@ -39,15 +43,16 @@ services:
     restart: always
     depends_on:
       - mariadb
-
-    environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER:     ${MYSQL_USER}
-      DOMAIN_NAME:    ${DOMAIN_NAME}
-      WP_ADMIN_USER:  ${WP_ADMIN_USER}
-      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
-      WP_USER:        ${WP_USER}
-      WP_USER_EMAIL:  ${WP_USER_EMAIL}
+    env_file:
+      - .env
+    # environment:
+    #   MYSQL_DATABASE: ${MYSQL_DATABASE}
+    #   MYSQL_USER:     ${MYSQL_USER}
+    #   DOMAIN_NAME:    ${DOMAIN_NAME}
+    #   WP_ADMIN_USER:  ${WP_ADMIN_USER}
+    #   WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+    #   WP_USER:        ${WP_USER}
+    #   WP_USER_EMAIL:  ${WP_USER_EMAIL}
 
     secrets:
       - db_password
@@ -67,12 +72,41 @@ services:
     restart: always
     depends_on:
       - wordpress
-    environment:
-      DOMAIN_NAME: ${DOMAIN_NAME}
+    env_file:
+      - .env
+    # environment:
+    #   DOMAIN_NAME: ${DOMAIN_NAME}
     ports:
       - "443:443"
     volumes:
       - wordpress_files:/var/www/html
+    networks:
+      - inception
+  
+  redis:
+    build:
+      context: ./requirements/bonus/redis
+      dockerfile: Dockerfile
+    container_name: redis
+    restart: always
+    networks:
+      - inception
+  
+  ftp:
+    build:
+      context: ./requirements/bonus/ftp
+      dockerfile: Dockerfile
+    container_name: ftp
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "21:21"
+      - "21100-21110:21100-21110"
+    volumes:
+      - wordpress_files:/var/www/html
+    secrets:
+      - ftp_password
     networks:
       - inception
 
