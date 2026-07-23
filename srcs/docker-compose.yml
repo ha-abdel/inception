@@ -110,6 +110,48 @@ services:
     networks:
       - inception
 
+  website:
+    build:
+      context: ./requirements/bonus/website
+      dockerfile: Dockerfile
+    container_name: website
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8080:80"
+    networks:
+      - inception
+  
+  adminer:
+    build:
+      context: ./requirements/bonus/adminer
+      dockerfile: Dockerfile
+    container_name: adminer
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8081:8080"
+    networks:
+      - inception
+  
+  portainer:
+    build:
+      context: ./requirements/bonus/portainer
+      dockerfile: Dockerfile
+    container_name: portainer
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    networks:
+      - inception
+    volumes:
+      - portainer_data:/data
+      - docker_socket:/run/docker.sock
+
 volumes:
   db_data:
     driver: local
@@ -124,6 +166,18 @@ volumes:
       type: none
       o: bind
       device: /home/abdel-ha/data/wordpress
+  portainer_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/abdel-ha/data/portainer
+  docker_socket:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "/run/docker.sock"
 
 networks:
   inception:

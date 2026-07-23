@@ -1,53 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inception Bonus</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-        }
-        .container {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            padding: 4rem;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 0.5rem;
-        }
-        .highlight {
-            background: rgba(255,255,255,0.2);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            display: inline-block;
-            margin-top: 1rem;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>abdel-ha — 42 Student</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      max-width: 640px;
+      width: 90%;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 3rem;
+      background: #161b22;
+    }
+
+    .login {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #58a6ff;
+      letter-spacing: -1px;
+    }
+
+    .school {
+      color: #8b949e;
+      margin-top: 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #30363d;
+      margin: 2rem 0;
+    }
+
+    .section-title {
+      color: #8b949e;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+
+    .stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .badge {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.8rem;
+      color: #79c0ff;
+    }
+
+    .project {
+      margin-bottom: 1.25rem;
+    }
+
+    .project-name {
+      color: #58a6ff;
+      font-size: 1rem;
+    }
+
+    .project-desc {
+      color: #8b949e;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+      line-height: 1.5;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      color: #484f58;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    .dot { color: #3fb950; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 Inception Bonus</h1>
-        <p>Welcome to the bonus services!</p>
-        <p>This website is served by Nginx.</p>
-        <div class="highlight">✨ Extra services: Adminer • FTP • Portainer • Redis</div>
+  <div class="card">
+    <div class="login">abdel-ha</div>
+    <div class="school">42 Network — Student</div>
+
+    <hr class="divider">
+
+    <div class="section-title">Stack</div>
+    <div class="stack">
+      <span class="badge">C</span>
+      <span class="badge">C++</span>
+      <span class="badge">Docker</span>
+      <span class="badge">Linux</span>
+      <span class="badge">Bash</span>
+      <span class="badge">NGINX</span>
+      <span class="badge">MariaDB</span>
+      <span class="badge">WordPress</span>
     </div>
+
+    <div class="section-title">Projects</div>
+
+    <div class="project">
+      <div class="project-name">Inception</div>
+      <div class="project-desc">
+        A full Docker infrastructure: NGINX reverse proxy with TLS,
+        WordPress + PHP-FPM, MariaDB, Redis cache, FTP, Adminer.
+        Everything from scratch — no pre-built images.
+      </div>
+    </div>
+
+
+    <hr class="divider">
+
+    <div class="footer">
+      <span class="dot">●</span> running inside Docker · Inception project · 42
+    </div>
+  </div>
 </body>
 </html>

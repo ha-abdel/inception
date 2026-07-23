@@ -11,7 +11,7 @@ RUN apt-get update && \
 COPY conf/nginx.conf /etc/nginx/conf.d/default.conf
 
 
-# RUN rm -f /etc/nginx/sites-enabled/default
+RUN rm -f /etc/nginx/sites-enabled/default
 
 COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

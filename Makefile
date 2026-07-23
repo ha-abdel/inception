@@ -6,6 +6,7 @@ all: create_dirs up
 create_dirs:
 	mkdir -p $(DATA_DIR)/mariadb
 	mkdir -p $(DATA_DIR)/wordpress
+	mkdir -p $(DATA_DIR)/portainer
 
 up:
 	docker compose -f $(COMPOSE_FILE) up --build
@@ -19,8 +20,9 @@ clean: down
 	sudo rm -rf $(DATA_DIR)/wordpress/
 
 fclean: clean
-# 	docker system prune -af
-
+	-docker rmi -f `docker images -qa` 2> /dev/null;
+	-docker volume rm `docker volume ls -q` 2> /dev/null;
+	-docker network rm `docker network ls -q` 2>/dev/null
 re: fclean all
 
 status:
