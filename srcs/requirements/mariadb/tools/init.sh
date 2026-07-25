@@ -32,6 +32,5 @@ fi
 
 
 echo " starting MariaDB..."
-# --user=mysql Runs the server as the 'mysql' system user for wordpress.
 # --console  Writes log output to STDOUT (console) instead of log files.
 exec mysqld --user=mysql --console

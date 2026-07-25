@@ -20,17 +20,11 @@ services:
     restart: always
     env_file:
       - .env
-    # environment:
-    #   MYSQL_DATABASE: ${MYSQL_DATABASE}
-    #   MYSQL_USER:     ${MYSQL_USER}
-
     secrets:
       - db_password
       - db_root_password
-
     volumes:
       - db_data:/var/lib/mysql
-
     networks:
       - inception
 
@@ -38,29 +32,17 @@ services:
     build:
       context: ./requirements/wordpress
       dockerfile: Dockerfile
-
     container_name: wordpress
     restart: always
     depends_on:
       - mariadb
     env_file:
       - .env
-    # environment:
-    #   MYSQL_DATABASE: ${MYSQL_DATABASE}
-    #   MYSQL_USER:     ${MYSQL_USER}
-    #   DOMAIN_NAME:    ${DOMAIN_NAME}
-    #   WP_ADMIN_USER:  ${WP_ADMIN_USER}
-    #   WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
-    #   WP_USER:        ${WP_USER}
-    #   WP_USER_EMAIL:  ${WP_USER_EMAIL}
-
     secrets:
       - db_password
       - credentials
-
     volumes:
       - wordpress_files:/var/www/html
-
     networks:
       - inception
 
@@ -74,8 +56,6 @@ services:
       - wordpress
     env_file:
       - .env
-    # environment:
-    #   DOMAIN_NAME: ${DOMAIN_NAME}
     ports:
       - "443:443"
     volumes:
@@ -135,22 +115,17 @@ services:
       - "8081:8080"
     networks:
       - inception
-  
-  portainer:
+
+  homer:
     build:
-      context: ./requirements/bonus/portainer
+      context: ./requirements/bonus/homer
       dockerfile: Dockerfile
-    container_name: portainer
+    container_name: homer
     restart: always
-    env_file:
-      - .env
     ports:
-      - "5000:5000"
+      - "8085:8085"
     networks:
       - inception
-    volumes:
-      - portainer_data:/data
-      - docker_socket:/run/docker.sock
 
 volumes:
   db_data:
@@ -166,18 +141,6 @@ volumes:
       type: none
       o: bind
       device: /home/abdel-ha/data/wordpress
-  portainer_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/abdel-ha/data/portainer
-  docker_socket:
-    driver: local
-    driver_opts:
-      type: "none"
-      o: "bind"
-      device: "/run/docker.sock"
 
 networks:
   inception:

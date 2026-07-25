@@ -6,7 +6,6 @@ all: create_dirs up
 create_dirs:
 	mkdir -p $(DATA_DIR)/mariadb
 	mkdir -p $(DATA_DIR)/wordpress
-	mkdir -p $(DATA_DIR)/portainer
 
 up:
 	docker compose -f $(COMPOSE_FILE) up --build

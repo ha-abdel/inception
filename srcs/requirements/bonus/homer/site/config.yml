@@ -1,0 +1,47 @@
+# config.yml — Homer dashboard configuration
+# Homer reads this YAML and generates the dashboard UI from it.
+# No server-side processing — pure static file served by NGINX.
+
+title: "Inception"
+subtitle: "abdel-ha · 42 Infrastructure"
+logo: "logo.png"
+
+# Header links
+links:
+  - name: "abdel-ha"
+    icon: "fas fa-graduation-cap"
+    url: "https://github.com/ha-abdel/"
+    target: "_blank"
+
+# Service groups — each group appears as a section on the dashboard
+services:
+  - name: "Core Stack"
+    icon: "fas fa-server"
+    items:
+      - name: "WordPress"
+        logo: "https://s.w.org/style/images/about-logo.png"
+        subtitle: "Main website and CMS"
+        tag: "mandatory"
+        url: "https://abdel-ha.42.fr"
+        target: "_blank"
+
+      - name: "Adminer"
+        icon: "fas fa-database"
+        subtitle: "Database management UI"
+        tag: "bonus"
+        url: "http://abdel-ha.42.fr:8081"
+        target: "_blank"
+
+      - name: "Portfolio"
+        icon: "fas fa-user"
+        subtitle: "Static personal website"
+        tag: "bonus"
+        url: "http://abdel-ha.42.fr:8080"
+        target: "_blank"
+
+      - name: "Homer"
+        icon: "fas fa-home"
+        subtitle: "This dashboard"
+        tag: "bonus"
+        url: "http://abdel-ha.42.fr:8085"
+        target: "_blank"
