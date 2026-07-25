@@ -13,7 +13,7 @@ The Inception stack runs the following services simultaneously:
 | **WordPress** | Main website and content management system | https://abdel-ha.42.fr |
 | **Adminer** | Web-based database management panel | http://abdel-ha.42.fr:8081 |
 | **Portfolio** | Static personal website | http://abdel-ha.42.fr:8080 |
-| **Homer** | Dashboard linking all services | http://abdel-ha.42.fr:8082 |
+| **Homer** | Dashboard linking all services | http://abdel-ha.42.fr:8085 |
 | **FTP server** | Direct file access to WordPress files | ftp://\<vm-ip\>:21 |
 | **Redis** | Internal cache (no user interface — works in background) | internal only |
 
@@ -79,11 +79,6 @@ Accept the certificate warning if prompted. You will see the WordPress website.
 https://abdel-ha.42.fr/wp-admin
 ```
 
-Log in with the administrator credentials (see the Credentials section below). From here you can:
-- Write and publish posts and pages
-- Install and manage themes and plugins
-- Manage users
-- Upload media files
 
 ### Adminer — database panel
 
@@ -91,22 +86,11 @@ Log in with the administrator credentials (see the Credentials section below). F
 http://abdel-ha.42.fr:8081
 ```
 
-Use this to inspect and manage the MariaDB database directly. On the login screen:
-
-| Field | Value |
-|---|---|
-| System | MySQL |
-| Server | mariadb |
-| Username | wpuser |
-| Password | *(see db_password.txt)* |
-| Database | wordpress |
-
-> **Warning:** Adminer gives you direct access to the database. Deleting tables or rows here will break WordPress. Use it for inspection and debugging only.
 
 ### Homer dashboard
 
 ```
-http://abdel-ha.42.fr:8082
+http://abdel-ha.42.fr:8085
 ```
 
 A simple dashboard with links to all services. Start here if you are not sure which URL to use.
@@ -139,7 +123,6 @@ All credentials are stored as plain text files in the `secrets/` directory at th
 | Administrator | `wpmaster` | wpmaster@abdel-ha.42.fr | `credentials.txt` line 1 |
 | Author | `wpreader` | wpreader@abdel-ha.42.fr | `credentials.txt` line 2 |
 
-> The administrator username deliberately does not contain "admin" — this is a project requirement and also a security best practice.
 
 ### Changing a password
 
@@ -160,101 +143,3 @@ make status
 ```
 
 All containers should show `Up`. If any show `Exited` or `Restarting`, check the logs.
-
-### Reading logs
-
-```bash
-make logs
-```
-
-Shows live log output from all containers. Press `Ctrl+C` to stop following.
-
-For a specific service:
-
-```bash
-docker logs mariadb
-docker logs wordpress
-docker logs nginx
-docker logs redis
-docker logs ftp
-docker logs adminer
-docker logs website
-docker logs homer
-```
-
-### What healthy logs look like
-
-**MariaDB** — healthy output ends with:
-```
-mysqld: ready for connections.
-```
-
-**WordPress** — healthy output ends with:
-```
-NOTICE: fpm is running, pid 1
-NOTICE: ready to handle connections
-```
-
-**NGINX** — no output after start is normal. NGINX is silent when healthy. Errors appear as `[error]` lines.
-
-**Redis** — healthy output ends with:
-```
-Ready to accept connections
-```
-
-### Testing the NGINX TLS configuration
-
-```bash
-docker exec nginx nginx -t
-```
-
-Should print:
-```
-nginx: configuration file /etc/nginx/nginx.conf test is successful
-```
-
-### Testing the database connection
-
-```bash
-docker exec mariadb mysql -u wpuser -p"$(cat secrets/db_password.txt)" wordpress -e "SHOW TABLES;"
-```
-
-Should list the WordPress database tables (`wp_posts`, `wp_users`, etc.).
-
-### Testing Redis
-
-```bash
-docker exec redis redis-cli ping
-```
-
-Should return:
-```
-PONG
-```
-
-To confirm WordPress is actually using Redis:
-1. Log into WordPress admin at `https://abdel-ha.42.fr/wp-admin`
-2. Go to **Settings → Redis**
-3. Status should show **Connected**
-
-### Testing FTP access
-
-Using `lftp` on the host:
-```bash
-lftp -u ftpuser,$(cat secrets/ftp_password.txt) ftp://$(hostname -I | awk '{print $1}')
-```
-
-Once connected, `ls` should show the WordPress files (`wp-config.php`, `wp-content/`, etc.).
-
----
-
-## Automatic restarts
-
-All containers are configured with `restart: always`. If a container crashes or the host machine reboots, Docker automatically restarts every service without manual intervention. You do not need to run `make` again after a reboot — Docker handles it.
-
-To verify auto-restart is configured:
-```bash
-docker inspect mariadb | grep RestartPolicy
-```
-
-Should show `"Name": "always"`.

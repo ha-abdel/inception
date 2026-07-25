@@ -71,33 +71,24 @@ printf "AdminSecurePass42!\nUserSecurePass42!" > secrets/credentials.txt
 echo "FtpSecurePass42!" > secrets/ftp_password.txt
 ```
 
-> **Password rules:** Use at least 12 characters, mix upper/lower/digits/symbols. These go into a database and FTP daemon — weak passwords will work but are bad practice.
-
 ### 3 — Configure environment variables
 
 Edit `srcs/.env`:
 
 ```bash
-# Your 42 login — used for the domain and email addresses
 DOMAIN_NAME=abdel-ha.42.fr
 
-# MariaDB — non-secret configuration
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wpuser
 
-# WordPress admin account (must NOT contain "admin" or "administrator")
 WP_ADMIN_USER=wpmaster
 WP_ADMIN_EMAIL=wpmaster@abdel-ha.42.fr
 
-# WordPress second user (non-admin, role: author)
 WP_USER=wpreader
 WP_USER_EMAIL=wpreader@abdel-ha.42.fr
 
-# Host path where persistent data is stored
 DATA_PATH=/home/abdel-ha/data
 
-# Your VM's IP address — required for FTP passive mode
-# Get it with: hostname -I | awk '{print $1}'
 FTP_HOST=10.0.2.15
 ```
 
@@ -185,11 +176,6 @@ docker exec -it wordpress bash
 docker exec -it nginx bash
 docker exec -it redis bash
 
-# Run a one-off command without opening a shell
-docker exec mariadb mysql -u root -p"$(cat secrets/db_root_password.txt)" -e "SHOW DATABASES;"
-docker exec redis redis-cli info memory
-docker exec nginx nginx -t
-```
 
 ### Reading logs
 
@@ -202,11 +188,7 @@ docker logs -f mariadb
 docker logs -f wordpress
 docker logs -f nginx
 
-# Last 50 lines only
-docker logs --tail 50 mariadb
 
-# With timestamps
-docker logs -t wordpress
 ```
 
 ### Managing containers individually
@@ -259,9 +241,6 @@ These directories are mounted into containers via Docker named volumes:
 # List all volumes
 docker volume ls
 
-# Inspect a specific volume (shows host path)
-docker volume inspect srcs_db_data
-docker volume inspect srcs_wordpress_files
 ```
 
 ### Data lifecycle
@@ -276,23 +255,6 @@ docker volume inspect srcs_wordpress_files
 | `make clean` | **No — volumes and host dirs wiped** |
 | `make fclean` | **No — everything wiped** |
 
-### Backing up the database
-
-```bash
-# Dump the WordPress database to a file on the host
-docker exec mariadb mysqldump \
-    -u root -p"$(cat secrets/db_root_password.txt)" \
-    wordpress > backup_$(date +%Y%m%d).sql
-```
-
-### Restoring from a backup
-
-```bash
-docker exec -i mariadb mysql \
-    -u root -p"$(cat secrets/db_root_password.txt)" \
-    wordpress < backup_20240101.sql
-```
-
 ---
 
 ## Network architecture
@@ -303,8 +265,6 @@ docker exec -i mariadb mysql \
 # List all networks
 docker network ls
 
-# Inspect the inception network — shows all connected containers and their IPs
-docker network inspect srcs_inception
 ```
 
 ### Container IPs and DNS
@@ -320,162 +280,7 @@ Within the `inception` network, each container is reachable by its container nam
 | `ftp` | `ftp:21` | Yes — host ports 21, 21100-21110 |
 | `adminer` | `adminer:8081` | Yes — host port 8081 |
 | `website` | `website:8080` | Yes — host port 8080 |
-| `homer` | `homer:8082` | Yes — host port 8082 |
+| `homer` | `homer:8085` | Yes — host port 8085 |
 
-### Testing inter-container connectivity
-
-```bash
-# From the wordpress container, ping mariadb
-docker exec wordpress ping -c 1 mariadb
-
-# From wordpress, test the MariaDB port
-docker exec wordpress bash -c "echo > /dev/tcp/mariadb/3306 && echo 'port open'"
-
-# From nginx, test that PHP-FPM is reachable
-docker exec nginx bash -c "echo > /dev/tcp/wordpress/9000 && echo 'port open'"
-```
 
 ---
-
-## Debugging common issues
-
-### Container exits immediately on start
-
-```bash
-docker logs <container_name>
-```
-
-Look for the last line before exit. Common causes:
-- Script not executable (`chmod +x` missing in Dockerfile)
-- `set -e` aborted due to a failed command
-- Missing secret file (`cat: /run/secrets/...: No such file or directory`)
-- Port already in use on the host
-
-### WordPress cannot connect to MariaDB
-
-Symptoms in `docker logs wordpress`:
-```
-Error establishing a database connection
-```
-
-Checklist:
-1. Is MariaDB running? `docker ps | grep mariadb`
-2. Did `init.sh` complete? `docker logs mariadb` should end with `ready for connections`
-3. Does the WordPress user exist?
-   ```bash
-   docker exec mariadb mysql -u root -p"$(cat secrets/db_root_password.txt)" \
-       -e "SELECT User, Host FROM mysql.user WHERE User='wpuser';"
-   ```
-   The host must be `%`, not `localhost`.
-4. Are the passwords consistent between `secrets/db_password.txt` and what's in MariaDB?
-
-### NGINX returns 502 Bad Gateway
-
-PHP-FPM is not reachable. Check:
-```bash
-docker logs wordpress    # is PHP-FPM running?
-docker exec nginx bash -c "echo > /dev/tcp/wordpress/9000" && echo "ok"
-```
-
-If the TCP test fails: WordPress container is not on the `inception` network, or PHP-FPM crashed.
-
-### NGINX returns 403 Forbidden
-
-File permission issue. WordPress files must be owned by `www-data`:
-```bash
-docker exec wordpress ls -la /var/www/html | head
-# should show: www-data www-data
-```
-
-Fix:
-```bash
-docker exec wordpress chown -R www-data:www-data /var/www/html
-```
-
-### Volumes appear empty after `make`
-
-The host directories must exist before `docker compose up`. The `make create_dirs` target handles this. If you ran `docker compose up` manually without creating dirs first, the volume bind will fail silently.
-
-```bash
-ls -la /home/abdel-ha/data/
-# Should show mariadb/ and wordpress/ directories
-```
-
-### TLS certificate error in NGINX
-
-```bash
-docker exec nginx nginx -t
-```
-
-If it reports an SSL error, the cert or key file is missing or malformed:
-```bash
-docker exec nginx ls -la /etc/nginx/ssl/
-# Should show nginx.crt and nginx.key
-```
-
-The entrypoint script generates these. Check `docker logs nginx` for the `openssl req` output.
-
----
-
-## Image layer inspection
-
-```bash
-# Show all layers of a built image with sizes
-docker history srcs-mariadb --no-trunc
-docker history srcs-wordpress --no-trunc
-docker history srcs-nginx --no-trunc
-
-# Show final image sizes
-docker images | grep srcs
-```
-
-Use this to identify oversized layers (e.g. apt cache not cleaned, unnecessary files copied).
-
----
-
-## Security checklist
-
-Before submitting or presenting:
-
-- [ ] No passwords in any Dockerfile
-- [ ] No passwords in `docker-compose.yml` environment sections
-- [ ] `secrets/` directory is in `.gitignore`
-- [ ] `srcs/.env` is in `.gitignore`
-- [ ] No `latest` image tags anywhere
-- [ ] No `tail -f /dev/null` or `sleep infinity` as container commands
-- [ ] All containers use `restart: always`
-- [ ] All init scripts use `exec` as the final command
-- [ ] Only port 443 is exposed for mandatory services
-- [ ] WordPress admin username does not contain "admin" or "administrator"
-- [ ] MariaDB WordPress user has host `'%'` (not `'localhost'`)
-- [ ] `bind-address = 0.0.0.0` in `my.cnf`
-- [ ] PHP-FPM `listen = 0.0.0.0:9000` in `www.conf`
-- [ ] NGINX `ssl_protocols TLSv1.2 TLSv1.3` only
-- [ ] `daemon off` for NGINX, `-F` for PHP-FPM, `--console` for MariaDB
-
----
-
-## Project data flow summary
-
-```
-Browser (HTTPS :443)
-    │
-    ▼
-NGINX container
-    ├── static files (CSS/JS/images) ──→ reads wordpress_files volume directly
-    └── *.php requests ──────────────→ FastCGI → WordPress container :9000
-                                                        │
-                                              PHP-FPM worker executes PHP
-                                                        │
-                                         ┌──────────────┴──────────────┐
-                                         ▼                             ▼
-                                   Redis :6379                  MariaDB :3306
-                                   (cache hit → return)         (cache miss → query)
-                                         │                             │
-                                         └──────────────┬──────────────┘
-                                                        ▼
-                                                   HTML response
-                                                        │
-                                                        ▼
-                                                 NGINX → Browser
-```

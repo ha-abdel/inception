@@ -1,13 +1,5 @@
 *This project has been created as part of the 42 curriculum by abdel-ha.*
 
----
-
-# Inception
-
-A complete Docker-based infrastructure deploying a WordPress website with its full service stack, built entirely from scratch without any pre-built application images.
-
----
-
 ## Description
 
 Inception is a system administration project from the 42 curriculum. The goal is to design and deploy a small but complete web infrastructure using Docker and Docker Compose, where every service runs in its own dedicated container built from a custom Dockerfile.
@@ -26,7 +18,7 @@ Five bonus services extend the stack:
 - **FTP server** (vsftpd) — direct file access to the WordPress volume for theme and plugin management
 - **Static website** — a personal portfolio page served on port 8080, written in plain HTML/CSS (no PHP)
 - **Adminer** — single-file PHP database management UI, accessible on port 8081
-- **Homer** — a lightweight static service dashboard linking all services, served on port 8082
+- **Homer** — a lightweight static service dashboard linking all services, served on port 8085
 
 ### Project structure
 
@@ -37,7 +29,7 @@ Five bonus services extend the stack:
 ├── USER_DOC.md
 ├── DEV_DOC.md
 ├── secrets/
-│   ├── credentials.txt        # WordPress admin + user passwords (one per line)
+│   ├── credentials.txt        # WordPress admin + user passwords
 │   ├── db_password.txt        # MariaDB WordPress user password
 │   ├── db_root_password.txt   # MariaDB root password
 │   └── ftp_password.txt       # FTP user password
@@ -62,13 +54,8 @@ Five bonus services extend the stack:
 
 ### Use of Docker
 
-Docker allows each service to run in an isolated, reproducible environment. Every container in this project is built from a custom Dockerfile based on `debian:bookworm`. No pre-built application images (such as the official `wordpress` or `mariadb` images from Docker Hub) are used — the subject explicitly forbids this. Every dependency is installed manually, every configuration file is written by hand, and every startup script is authored from scratch.
+Docker allows each service to run in an isolated, reproducible environment. Every container in this project is built from a custom Dockerfile based on `debian:bookworm`. No pre-built application images (such as the official `wordpress` or `mariadb` images from Docker Hub) are used — the subject explicitly forbids this. Every dependency is installed manually, every configuration file is written by hand, and every startup script from scratch.
 
-This approach means:
-- Full understanding and control of every layer in the image
-- No hidden behaviour from upstream images
-- Reproducible builds pinned to specific package versions
-- Security through explicit, minimal installations (`--no-install-recommends`)
 
 ### Design choices
 
@@ -78,7 +65,7 @@ This approach means:
 
 **Named volumes with local bind driver.** Data is persisted using Docker named volumes configured with the `local` driver and `bind` option, storing data at `/home/abdel-ha/data/` on the host. This satisfies the subject requirement for a specific host path while using the named volume API.
 
-**Custom bridge network.** All containers communicate over a single custom Docker bridge network named `inception`. Docker's built-in DNS resolves container names as hostnames (e.g. WordPress connects to MariaDB using the hostname `mariadb`). The only port exposed to the host is 443 on NGINX — all other inter-container communication is internal.
+**Custom bridge network.** All containers communicate over a single custom Docker bridge network named `inception`. Docker's built-in DNS resolves container names as hostnames (e.g. WordPress connects to MariaDB using the hostname `mariadb`). The only mandatory port exposed to the host is 443 on NGINX — all other inter-container communication is internal.
 
 **Idempotent init scripts.** All setup scripts (MariaDB's `init.sh`, WordPress's `setup.sh`) guard against re-running on container restart. They check for the presence of already-initialised state (e.g. `/var/lib/mysql/mysql/`, `wp-config.php`) before executing setup steps. This ensures container restarts are fast and data is never overwritten.
 
@@ -214,7 +201,6 @@ This creates the host data directories, builds all Docker images, and starts all
 | Adminer | http://abdel-ha.42.fr:8081 |
 | Portfolio | http://abdel-ha.42.fr:8080 |
 | Homer dashboard | http://abdel-ha.42.fr:8082 |
-| Portainer | https://abdel-ha.42.fr:9443 |
 
 ### Stopping and cleaning
 
@@ -236,7 +222,7 @@ make re        # full wipe and rebuild from scratch
 - [MariaDB documentation](https://mariadb.com/kb/en/documentation/) — server configuration, SQL reference
 - [NGINX documentation](https://nginx.org/en/docs/) — configuration directives, location matching, FastCGI
 - [PHP-FPM configuration](https://www.php.net/manual/en/install.fpm.configuration.php) — pool settings, process management
-- [WordPress WP-CLI handbook](https://make.wordpress.org/cli/handbook/) — command reference for non-interactive WordPress management
+- [WordPress WP-CLI ](https://www.digitalocean.com/community/tutorials/how-to-use-wp-cli-to-manage-your-wordpress-site-from-the-command-line) — command reference for non-interactive WordPress management
 - [OpenSSL man page](https://www.openssl.org/docs/man3.0/man1/openssl-req.html) — certificate generation options
 - [vsftpd manual](https://security.appspot.com/vsftpd/vsftpd_conf.html) — FTP server configuration
 - [Redis configuration](https://redis.io/docs/management/config-file/) — server options, memory management
@@ -245,14 +231,13 @@ make re        # full wipe and rebuild from scratch
 
 - [Docker networking deep dive](https://docs.docker.com/network/) — bridge, host, overlay networks explained
 - [Understanding Linux namespaces](https://man7.org/linux/man-pages/man7/namespaces.7.html) — the kernel feature Docker is built on
-- [Linux cgroups overview](https://man7.org/linux/man-pages/man7/cgroups.7.html) — resource control for containers
-- [NGINX FastCGI guide](https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/) — connecting NGINX to PHP-FPM
-- [WordPress Object Cache](https://developer.wordpress.org/reference/classes/wp_object_cache/) — how WordPress caching works internally
-- [TLS 1.2 vs 1.3 differences](https://www.cloudflare.com/learning/ssl/why-use-tls-1.3/) — handshake improvements and cipher changes
+- [wordpress nginx](https://www.digitalocean.com/community/tutorials/install-wordpress-nginx-ubuntu) — setup nginx with wordpress
+
+- [wordpress nginx](https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-docker-compose) — wordpress with docker compose
 
 ### AI usage in this project
 
-Claude (Anthropic) was used as a learning and implementation assistant throughout this project. Specific uses:
+AI was used as a learning and implementation assistant throughout this project. Specific uses:
 
 - **Understanding Docker internals** — Linux namespaces, cgroups, OverlayFS, and how they combine to form containers; the difference between image layers and the writable container layer
 - **Understanding MariaDB** — how `mysqld` starts, the role of `mysql_install_db`, unix socket vs TCP authentication, and why `'%'` is needed for the WordPress user host
@@ -262,16 +247,3 @@ Claude (Anthropic) was used as a learning and implementation assistant throughou
 - **Debugging** — interpreting Docker log output, diagnosing the MariaDB `unauthenticated` connection warnings, understanding the `'%'` vs `'localhost'` user host distinction
 
 AI was used to deepen understanding and validate reasoning, not to blindly generate code. Every configuration line, every script, and every design decision in this project was understood, questioned, and intentionally chosen.
-
-
-
-# resources
-
-https://www.digitalocean.com/community/tutorials/install-wordpress-nginx-ubuntu
-
-https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-docker-compose
-
-
-https://www.digitalocean.com/community/tutorials/how-to-use-wp-cli-to-manage-your-wordpress-site-from-the-command-line
-
-

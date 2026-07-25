@@ -1,4 +1,3 @@
-# CRITICAL: never commit secrets or credentials
 secrets/db_password.txt
 secrets/db_root_password.txt
 secrets/credentials.txt
